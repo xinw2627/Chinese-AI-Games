@@ -129,8 +129,7 @@
     </div>
     <button class="nav-button" onclick="togglePage()">切换明天/今天 ➡️</button>
   </section>
-
-  <script>
+<script>
     // 常用城市中文映射字典
     const cityTranslation = {
       "Cape Coral": "开普科勒尔",
@@ -186,8 +185,7 @@
           return;
         }
 
-        const { latitude, longitude, timezone, name, utc_offset_seconds } = geoData.results[0];
-        const timeZoneOffset = utc_offset_seconds / 3600; 
+        const { latitude, longitude, timezone, name } = geoData.results[0];
         
         // 翻译城市名与区域名
         const chineseCityName = cityTranslation[name] || name;
@@ -203,6 +201,15 @@
         const weatherRes = await fetch(weatherUrl);
         const weatherData = await weatherRes.json();
 
+        // 正确获取天气数据返回的 utc_offset_seconds 并计算时区小时数
+        const offsetSeconds = weatherData.utc_offset_seconds;
+        const timeZoneOffset = (typeof offsetSeconds === 'number') ? offsetSeconds / 3600 : NaN;
+        
+        // 格式化时区显示文本
+        const timeZoneText = isNaN(timeZoneOffset)
+          ? 'UTC'
+          : `UTC ${timeZoneOffset >= 0 ? '+' : ''}${timeZoneOffset}`;
+
         // 3. 渲染数据到网页
         const prefix = isTargetCity ? 'target' : 'beijing';
         
@@ -211,7 +218,7 @@
         document.getElementById(`${prefix}Today`).innerHTML = `
           📅 日期：${weatherData.daily.time[0]}<br/>
           🌍 区域：${cnTimezone}<br/>
-          ⏰ 时区：UTC ${timeZoneOffset >= 0 ? '+' : ''}${timeZoneOffset}<br/>
+          ⏰ 时区：${timeZoneText}<br/>
           ☁️ 天气：${todayInfo.text} ${todayInfo.emoji}<br/>
           🌡️ 最高气温：${weatherData.daily.temperature_2m_max[0]}°C<br/>
           🌀 最高风速：${weatherData.daily.wind_speed_10m_max[0]} km/h
@@ -222,7 +229,7 @@
         document.getElementById(`${prefix}Tomorrow`).innerHTML = `
           📅 日期：${weatherData.daily.time[1]}<br/>
           🌍 区域：${cnTimezone}<br/>
-          ⏰ 时区：UTC ${timeZoneOffset >= 0 ? '+' : ''}${timeZoneOffset}<br/>
+          ⏰ 时区：${timeZoneText}<br/>
           ☁️ 天气：${tomorrowInfo.text} ${tomorrowInfo.emoji}<br/>
           🌡️ 最高气温：${weatherData.daily.temperature_2m_max[1]}°C<br/>
           🌀 最高风速：${weatherData.daily.wind_speed_10m_max[1]} km/h
@@ -245,5 +252,6 @@
       loadWeather('Beijing', false);
     };
   </script>
+  
 </body>
 </html>
