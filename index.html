@@ -3,47 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的游戏/工具库</title>
+    <title>欢迎来到王老师的AI游戏课件探索网</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
+            background-color: #f4f6f9; /* 柔和浅色背景 */
+            color: #333333; /* 暗色文字，清晰易读 */
             text-align: center;
             padding: 40px;
         }
-        h1 { color: #00ffcc; }
+        h1 { 
+            color: #2b6cb0; /* 漂亮的蓝色标题 */
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            color: #4a5568;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
         .game-card {
             display: inline-block;
-            background-color: #2a2a2a;
-            border-radius: 8px;
-            padding: 20px;
+            background-color: #ffffff; /* 纯白卡片背景 */
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
             margin: 15px;
-            width: 200px;
+            width: 220px;
             text-decoration: none;
-            color: #fff;
-            transition: transform 0.2s;
+            color: #2d3748;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         .game-card:hover {
-            transform: scale(1.05);
-            background-color: #333333;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            background-color: #f8fafc;
+        }
+        .game-card h2 {
+            color: #3182ce;
+            margin-top: 0;
         }
     </style>
 </head>
 <body>
-    <h1>🎮 我的游戏与工具展示</h1>
-    <p>点击下方卡片开始：</p>
+    <h1>🌟 欢迎来到王老师的AI游戏课件探索网</h1>
+    <p class="subtitle">点击下方卡片，开始探索有趣的互动课件：</p>
 
     <!-- 链接 1：天气预报 -->
     <a href="天气预报1.html" class="game-card">
-        <h2>天气预报</h2>
-        <p>点击打开天气预报工具</p>
+        <h2>🌦️ 天气预报</h2>
+        <p>点击打开天气预报互动工具</p>
     </a>
 
     <!-- 链接 2：麻将游戏 -->
     <a href="麻将1.html" class="game-card">
-        <h2>麻将游戏</h2>
-        <p>点击开始麻将游戏</p>
+        <h2>🀄 麻将游戏</h2>
+        <p>点击开始麻将游戏课件</p>
     </a>
 </body>
 </html>
