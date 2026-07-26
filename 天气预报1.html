@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>动态天气预报 - 课堂展示版</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f2f2f2;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      flex-direction: column;
+      padding: 30px;
+    }
+    .controls {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .controls input {
+      padding: 10px 15px;
+      font-size: 1.1em;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 350px;
+    }
+    .controls button {
+      padding: 10px 20px;
+      font-size: 1.1em;
+      background: #34C759;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .page {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .hidden { display: none !important; }
+    .weather-card {
+      background-color: #d0ecff;
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px 20px;
+      text-align: center;
+      width: 45%;
+      max-width: 500px;
+      color: black;
+      transition: transform 0.3s ease;
+    }
+    .city { font-size: 2em; margin-bottom: 8px; font-weight: bold; }
+    .emoji { font-size: 3.5em; margin-bottom: 5px; display: inline-block; }
+    .wind-wheel-icon {
+      font-size: 2.5em;
+      display: inline-block;
+      animation: windRotate 4s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes windRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .info {
+      font-size: 1.3em;
+      color: black;
+      line-height: 1.5;
+      margin-top: 10px;
+      text-align: left;
+      padding-left: 5%;
+      width: 90%;
+      display: block;
+    }
+    .nav-button {
+      padding: 15px 30px; font-size: 1.2em; font-weight: bold;
+      background: #007AFF; color: white; border: none; border-radius: 10px;
+      cursor: pointer; margin: 20px auto; display: block;
+    }
+    h1 { width: 100%; text-align: center; font-size: 1.8em; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+  <!-- 课堂互动控制器 -->
+  <div class="controls">
+    <input type="text" id="cityInput" value="Cape Coral" placeholder="输入城市英文名（如 Cape Coral, New York）">
+    <button onclick="fetchCustomWeather()">切换城市 🌍</button>
+  </div>
+
+  <!-- 第一页：今天 -->
+  <section id="todayPage" class="page">
+    <h1>天气预报 - 今天</h1>
+    <div class="weather-card">
+      <div class="city" id="cityNameDisplay">📍 开普科勒尔</div>
+      <div class="emoji">☀️</div>
+      <div class="info" id="targetToday">正在联网加载实时天气...</div>
+    </div>
+    <div class="weather-card">
+      <div class="city">📍 北京 (对照组)</div>
+      <div class="emoji">🌧️</div>
+      <div class="info" id="beijingToday">正在联网加载北京天气...</div>
+    </div>
+    <button class="nav-button" onclick="togglePage()">切换明天/今天 ➡️</button>
+  </section>
+
+  <!-- 第二页：明天 -->
+  <section id="tomorrowPage" class="page hidden">
+    <h1>天气预报 - 明天</h1>
+    <div class="weather-card">
+      <div class="city" id="cityNameDisplayTomorrow">📍 开普科勒尔</div>
+      <div class="emoji">🌤️</div>
+      <div class="info" id="targetTomorrow">正在联网加载...</div>
+    </div>
+    <div class="weather-card">
+      <div class="city">📍 北京 (对照组)</div>
+      <div class="emoji">🌤️</div>
+      <div class="info" id="beijingTomorrow">正在联网加载...</div>
+    </div>
+    <button class="nav-button" onclick="togglePage()">切换明天/今天 ➡️</button>
+  </section>
+
+  <script>
+    // 常用城市中文映射字典
+    const cityTranslation = {
+      "Cape Coral": "开普科勒尔",
+      "Beijing": "北京",
+      "New York": "纽约",
+      "Denver": "丹佛",
+      "London": "伦敦",
+      "Tokyo": "东京",
+      "Paris": "巴黎"
+    };
+
+    // 英文时区文本翻译函数
+    function translateTimezone(tzStr) {
+      if (!tzStr) return "";
+      return tzStr
+        .replace("America/New_York", "美国/纽约")
+        .replace("America/Denver", "美国/丹佛")
+        .replace("America/Chicago", "美国/芝加哥")
+        .replace("America/Los_Angeles", "美国/洛杉矶")
+        .replace("Europe/London", "英国/伦敦")
+        .replace("Europe/Paris", "法国/巴黎")
+        .replace("Asia/Tokyo", "日本/东京")
+        .replace("Asia/Shanghai", "中国/上海时区");
+    }
+
+    // 页面切换
+    function togglePage() {
+      document.getElementById('todayPage').classList.toggle('hidden');
+      document.getElementById('tomorrowPage').classList.toggle('hidden');
+    }
+
+    // 根据天气代码映射Emoji和状态
+    function getWeatherDesc(code) {
+      if (code === 0) return { text: "晴朗", emoji: "☀️" };
+      if ([1, 2, 3].includes(code)) return { text: "多云", emoji: "🌤️" };
+      if ([45, 48].includes(code)) return { text: "有雾", emoji: "🌫️" };
+      if ([51, 53, 55, 61, 63, 65].includes(code)) return { text: "小雨/阵雨", emoji: "🌧️" };
+      if ([71, 73, 75, 77, 85, 86].includes(code)) return { text: "下雪", emoji: "❄️" };
+      if ([95, 96, 99].includes(code)) return { text: "雷阵雨", emoji: "⛈️" };
+      return { text: "阴天", emoji: "☁️" };
+    }
+
+    // 核心函数：通过API获取任何城市的数据
+    async function loadWeather(cityName, isTargetCity = true) {
+      try {
+        // 1. 自动调用地理编码API
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1`;
+        const geoRes = await fetch(geoUrl);
+        const geoData = await geoRes.json();
+        
+        if (!geoData.results || geoData.results.length === 0) {
+          alert(`找不到城市: ${cityName}，请尝试输入正确的英文名称`);
+          return;
+        }
+
+        const { latitude, longitude, timezone, name, utc_offset_seconds } = geoData.results[0];
+        const timeZoneOffset = utc_offset_seconds / 3600; 
+        
+        // 翻译城市名与区域名
+        const chineseCityName = cityTranslation[name] || name;
+        const cnTimezone = translateTimezone(timezone);
+
+        if (isTargetCity) {
+          document.getElementById('cityNameDisplay').innerText = `📍 ${chineseCityName}`;
+          document.getElementById('cityNameDisplayTomorrow').innerText = `📍 ${chineseCityName}`;
+        }
+
+        // 2. 联网获取该经纬度的真实天气数据
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weather_code,temperature_2m_max,wind_speed_10m_max&timezone=auto`;
+        const weatherRes = await fetch(weatherUrl);
+        const weatherData = await weatherRes.json();
+
+        // 3. 渲染数据到网页
+        const prefix = isTargetCity ? 'target' : 'beijing';
+        
+        // 今天数据
+        const todayInfo = getWeatherDesc(weatherData.daily.weather_code[0]);
+        document.getElementById(`${prefix}Today`).innerHTML = `
+          📅 日期：${weatherData.daily.time[0]}<br/>
+          🌍 区域：${cnTimezone}<br/>
+          ⏰ 时区：UTC ${timeZoneOffset >= 0 ? '+' : ''}${timeZoneOffset}<br/>
+          ☁️ 天气：${todayInfo.text} ${todayInfo.emoji}<br/>
+          🌡️ 最高气温：${weatherData.daily.temperature_2m_max[0]}°C<br/>
+          🌀 最高风速：${weatherData.daily.wind_speed_10m_max[0]} km/h
+        `;
+
+        // 明天数据
+        const tomorrowInfo = getWeatherDesc(weatherData.daily.weather_code[1]);
+        document.getElementById(`${prefix}Tomorrow`).innerHTML = `
+          📅 日期：${weatherData.daily.time[1]}<br/>
+          🌍 区域：${cnTimezone}<br/>
+          ⏰ 时区：UTC ${timeZoneOffset >= 0 ? '+' : ''}${timeZoneOffset}<br/>
+          ☁️ 天气：${tomorrowInfo.text} ${tomorrowInfo.emoji}<br/>
+          🌡️ 最高气温：${weatherData.daily.temperature_2m_max[1]}°C<br/>
+          🌀 最高风速：${weatherData.daily.wind_speed_10m_max[1]} km/h
+        `;
+
+      } catch (error) {
+        console.error("加载天气失败", error);
+      }
+    }
+
+    // 用户手动输入城市切换
+    function fetchCustomWeather() {
+      const city = document.getElementById('cityInput').value.trim();
+      if (city) loadWeather(city, true);
+    }
+
+    // 页面初次加载：默认加载开普科勒尔和北京
+    window.onload = function () {
+      loadWeather('Cape Coral', true);
+      loadWeather('Beijing', false);
+    };
+  </script>
+</body>
+</html>
